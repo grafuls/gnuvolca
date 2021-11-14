@@ -14,6 +14,8 @@ Connect the audio out of your machine to the audio in on the Volca Sample at hig
 
 Pass the full path to the directory as an argument to gnuvolca.
 
+**WARNING**: Do not execute the script without pluging the line out to your volca. Reproducing the raw audio through your speakers might damage them.
+
 ```bash
 $ ./gnuvolca.py --dir /path/to/sample/pack
 ```
