@@ -5,6 +5,7 @@ import os
 import subprocess
 import platform
 import signal
+import filetype
 
 from playsound import playsound
 
@@ -13,21 +14,37 @@ CWD = os.getcwd()
 FULL_PATH_SCRIPT = os.path.join(CWD, "bin", SYRO_SCRIPT)
 
 
+def is_wav(directory, file_name):
+    if ".wav" in file_name:
+        return True
+
+    full_path = os.path.join(directory, file_name)
+    kind = filetype.guess(full_path)
+    if kind and kind.extension == 'wav':
+        return True
+
+    return False
+
+
 def main(directory):
     for root, dir, files in os.walk(directory):
-        for i, file in enumerate([file for file in files if ".wav" in file]):
+        for i, file in enumerate([file for file in files
+                                  if is_wav(directory, file)]):
             if i > 100:
                 break
-            
+
             filename = str(file).split(".")[0]
             file_out = f"{i:0>3}-{filename}-stream.wav"
-            
-            proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}", f"{file_out}", f"s{i}c:{directory}{filename}.wav"])
+
+            in_path = os.path.join(directory, file)
+            proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}", f"{file_out}",
+                                     f"s{i}c:{in_path}"])
             proc.wait()
 
             playsound(f"{file_out}")
-            
+
             os.remove(file_out)
+
 
 def clear_samples():
     for i in range(100):
