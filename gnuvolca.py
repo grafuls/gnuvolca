@@ -26,24 +26,24 @@ def is_wav(directory, file_name):
     return False
 
 
-def main(directory):
-    for root, dir, files in os.walk(directory):
-        for i, file in enumerate([file for file in files
-                                  if is_wav(directory, file)]):
-            if i > 100:
-                break
+def upload_dir(directory):
+    for i, file_name in enumerate([fname
+                                   for fname in os.listdir(directory)
+                                   if is_wav(directory, fname)]):
+        if i > 99:
+            break
 
-            filename = str(file).split(".")[0]
-            file_out = f"{i:0>3}-{filename}-stream.wav"
+        base_name, ext = os.path.splitext(file_name)
+        full_path = os.path.join(directory, file_name)
 
-            in_path = os.path.join(directory, file)
-            proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}", f"{file_out}",
-                                     f"s{i}c:{in_path}"])
-            proc.wait()
+        tmp_file = f"{i:0>3}-{base_name}-stream.wav"
+        proc = subprocess.Popen(
+            [f"{FULL_PATH_SCRIPT}", f"{tmp_file}", f"s{i}c:{full_path}"]
+        )
+        proc.wait()
 
-            playsound(f"{file_out}")
-
-            os.remove(file_out)
+        playsound(tmp_file)
+        os.remove(tmp_file)
 
 
 def clear_samples():
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         if args.clear:
             clear_samples()
         else:
-            main(args.dir)
+            upload_dir(args.dir)
     except KeyboardInterrupt:
-            for line in os.popen("ps aux | grep playsound | grep -v grep | awk '{ print $2 }'"):
-                os.kill(int(line.strip()), signal.SIGKILL)
+        for line in os.popen("ps aux | grep playsound | grep -v grep | awk '{ print $2 }'"):
+            os.kill(int(line.strip()), signal.SIGKILL)
