@@ -20,6 +20,14 @@ Pass the full path to the directory as an argument to gnuvolca.
 $ ./gnuvolca.py --dir /path/to/sample/pack
 ```
 
+### Vosyr support
+It can also load samples from a Vosyr project
+
+```bash
+$ ./gnuvolca.py --vsj /path/to/vosyr/project.vsj
+```
+
+
 ## Installation
 ### Via virtualenv
 ```bash
