@@ -3,6 +3,7 @@
 import time
 import argparse
 import os
+import logging
 import subprocess
 import platform
 import signal
@@ -19,7 +20,8 @@ def main(directory):
     for root, dir, files in os.walk(directory):
         with alive_bar(len(files)) as bar:
 
-            for i, file in enumerate([file for file in files if ".wav" in file]):
+            for i, file in enumerate([file for file in files
+                                      if ".wav" in file]):
                 if i > 100:
                     raise ValueError("More than 100 samples in specified \
                         directory. Max limit 100.")
@@ -49,6 +51,9 @@ def clear_samples():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger('alive_progress')
+
     parser = argparse.ArgumentParser(
         prog="gnuvolca",
         description="""
