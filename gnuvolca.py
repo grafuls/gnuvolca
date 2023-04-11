@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+"""
+Upload and manage WAV files on a Korg Volca Sample device using Linux systems.
+
+This module provides a command-line interface for uploading WAV files to a Korg
+Volca Sample device on Linux systems. It processes WAV files in the specified
+directory, converts them using the syro_volcasample_example script, and plays
+the converted samples. It also provides an option to clear all samples from the
+Volca Sample device.
+
+Usage:
+gnuvolca -d <directory> # Upload WAV files from the specified directory
+gnuvolca -c # Clear all samples from the Volca Sample device
+
+Functions:
+main(directory) : Process and upload WAV files in the specified directory
+clear_samples() : Clear all samples from the Volca Sample device
+"""
 
 import time
 import argparse
@@ -20,7 +37,7 @@ def main(directory):
     """
     Process WAVs in directory and upload to Korg Volca Sample.
 
-    This function iterates through the provided directory and its 
+    This function iterates through the provided directory and its
     subdirectories, searching for WAV files. For each WAV file found, it calls
     the syro_volcasample_example script to convert and prepare the sample for
     uploading. The converted sample is then played using playsound and deleted
@@ -34,6 +51,8 @@ def main(directory):
         ValueError: If more than 100 WAV files are found in the
         specified directory.
     """
+
+    logging.info("Processing and uploading samples")
     for root, dir, files in os.walk(directory):
         with alive_bar(len(files)) as progress_bar:
 
@@ -43,7 +62,7 @@ def main(directory):
                     raise ValueError("More than 100 samples in specified \
                         directory. Max limit 100.")
 
-                filename = str(file).split(".")[0]
+                filename = str(file).split(".", maxsplit=1)[0]
                 file_out = f"{i:0>3}-{filename}-stream.wav"
 
                 proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}",
@@ -61,7 +80,6 @@ def main(directory):
                 progress_bar()
 
 
-
 def clear_samples():
     """
     Clear all 100 sample slots on the Korg Volca Sample.
@@ -71,14 +89,24 @@ def clear_samples():
     an empty sample, and plays the sound using playsound.
     The temporary file is then removed.
     """
+
+    logging.info("Clearing all sample slots")
     for i in range(100):
-        clr_out = f"{i:0>3}-stream_clr.wav"
-        proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}", f"{clr_out}", f"e{i}:"])
-        proc.wait()
+        with alive_bar(100) as progress_bar:
+            clr_out = f"{i:0>3}-stream_clr.wav"
+            proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}",
+                                     f"{clr_out}",
+                                     f"e{i}:"],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            proc.wait()
+            out, err = proc.communicate()
 
-        playsound(clr_out)
+            playsound(clr_out)
+            os.remove(clr_out)
 
-        os.remove(clr_out)
+            print(out.decode('utf-8').strip(), end='\r')
+            progress_bar()
 
 
 if __name__ == "__main__":
@@ -89,7 +117,8 @@ if __name__ == "__main__":
         prog="gnuvolca",
         description="""
         Korg Volca Sample uploader for linux.
-        Detects all .wav files in the specified directory, converts and reproduces all file uploads.
+        Detects all .wav files in the specified directory, converts and
+        reproduces all file uploads.
         """
     )
 
