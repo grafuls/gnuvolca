@@ -51,7 +51,6 @@ def main(directory):
         ValueError: If more than 100 WAV files are found in the
         specified directory.
     """
-
     logging.info("Processing and uploading samples")
     for root, dir, files in os.walk(directory):
         with alive_bar(len(files)) as progress_bar:
@@ -89,11 +88,11 @@ def clear_samples():
     an empty sample, and plays the sound using playsound.
     The temporary file is then removed.
     """
-
     logging.info("Clearing all sample slots")
     with alive_bar(100) as progress_bar:
         for i in range(100):
             clr_out = f"{i:0>3}-stream_clr.wav"
+
             proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}",
                                      f"{clr_out}",
                                      f"e{i}:"],
@@ -101,8 +100,10 @@ def clear_samples():
                                     stderr=subprocess.PIPE)
             proc.wait()
             out, err = proc.communicate()
+
             playsound(clr_out)
             os.remove(clr_out)
+
             print(out.decode('utf-8').strip(), end='\r')
             progress_bar()
 
