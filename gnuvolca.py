@@ -17,8 +17,25 @@ FULL_PATH_SCRIPT = os.path.join(CWD, "bin", SYRO_SCRIPT)
 
 
 def main(directory):
+    """
+    Process WAVs in directory and upload to Korg Volca Sample.
+
+    This function iterates through the provided directory and its 
+    subdirectories, searching for WAV files. For each WAV file found, it calls
+    the syro_volcasample_example script to convert and prepare the sample for
+    uploading. The converted sample is then played using playsound and deleted
+    from the filesystem.
+
+    Args:
+        directory (str): The path to the directory containing the WAV files to
+        be processed.
+
+    Raises:
+        ValueError: If more than 100 WAV files are found in the
+        specified directory.
+    """
     for root, dir, files in os.walk(directory):
-        with alive_bar(len(files)) as bar:
+        with alive_bar(len(files)) as progress_bar:
 
             for i, file in enumerate([file for file in files
                                       if ".wav" in file]):
@@ -31,15 +48,29 @@ def main(directory):
 
                 proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}",
                                          f"{file_out}",
-                                         f"s{i}c:{directory}{filename}.wav"])
+                                         f"s{i}c:{directory}{filename}.wav"],
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
                 proc.wait()
+                out, err = proc.communicate()
 
                 playsound(f"{file_out}")
                 os.remove(file_out)
-                bar()
+
+                print(out.decode('utf-8').strip(), end='\r')
+                progress_bar()
+
 
 
 def clear_samples():
+    """
+    Clear all 100 sample slots on the Korg Volca Sample.
+
+    This function generates temporary WAV files for each of the 100 sample
+    slots, calls the syro_volcasample_example script to create a file with
+    an empty sample, and plays the sound using playsound.
+    The temporary file is then removed.
+    """
     for i in range(100):
         clr_out = f"{i:0>3}-stream_clr.wav"
         proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}", f"{clr_out}", f"e{i}:"])
