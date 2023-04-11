@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 import argparse
 import os
 import subprocess
@@ -7,6 +8,7 @@ import platform
 import signal
 
 from playsound import playsound
+from alive_progress import alive_bar
 
 SYRO_SCRIPT = "syro_volcasample_example.%s" % platform.machine()
 CWD = os.getcwd()
@@ -15,19 +17,25 @@ FULL_PATH_SCRIPT = os.path.join(CWD, "bin", SYRO_SCRIPT)
 
 def main(directory):
     for root, dir, files in os.walk(directory):
-        for i, file in enumerate([file for file in files if ".wav" in file]):
-            if i > 100:
-                break
-            
-            filename = str(file).split(".")[0]
-            file_out = f"{i:0>3}-{filename}-stream.wav"
-            
-            proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}", f"{file_out}", f"s{i}c:{directory}{filename}.wav"])
-            proc.wait()
+        with alive_bar(len(files)) as bar:
 
-            playsound(f"{file_out}")
-            
-            os.remove(file_out)
+            for i, file in enumerate([file for file in files if ".wav" in file]):
+                if i > 100:
+                    raise ValueError("More than 100 samples in specified \
+                        directory. Max limit 100.")
+
+                filename = str(file).split(".")[0]
+                file_out = f"{i:0>3}-{filename}-stream.wav"
+
+                proc = subprocess.Popen([f"{FULL_PATH_SCRIPT}",
+                                         f"{file_out}",
+                                         f"s{i}c:{directory}{filename}.wav"])
+                proc.wait()
+
+                playsound(f"{file_out}")
+                os.remove(file_out)
+                bar()
+
 
 def clear_samples():
     for i in range(100):
@@ -68,5 +76,5 @@ if __name__ == "__main__":
         else:
             main(args.dir)
     except KeyboardInterrupt:
-            for line in os.popen("ps aux | grep playsound | grep -v grep | awk '{ print $2 }'"):
-                os.kill(int(line.strip()), signal.SIGKILL)
+        for line in os.popen("ps aux | grep playsound | grep -v grep | awk '{ print $2 }'"):
+            os.kill(int(line.strip()), signal.SIGKILL)
