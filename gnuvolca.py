@@ -73,6 +73,7 @@ def main(directory):
                 out, err = proc.communicate()
 
                 playsound(f"{file_out}")
+                time.sleep(3)
                 os.remove(file_out)
 
                 print(out.decode('utf-8').strip(), end='\r')
